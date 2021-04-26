@@ -1,7 +1,6 @@
 package gotcp
 
 import (
-	"fmt"
 	"net"
 	"sync"
 	"time"
@@ -18,10 +17,6 @@ type Server struct {
 	protocol  Protocol        // customize packet protocol
 	exitChan  chan struct{}   // notify all goroutines to shutdown
 	waitGroup *sync.WaitGroup // wait for all goroutines
-}
-
-type Client struct {
-	Server
 }
 
 // NewServer creates a server
@@ -63,14 +58,6 @@ func (s *Server) Start(listener *net.TCPListener, acceptTimeout time.Duration) {
 			s.waitGroup.Done()
 		}()
 	}
-}
-
-// Start starts service
-func (s *Server) StartDual(conn *net.TCPConn, acceptTimeout time.Duration) {
-	defer conn.Close()
-	go newConn(conn, s).Do()
-	exitSignal := <-s.exitChan
-	fmt.Println("Exit signal:", exitSignal)
 }
 
 // Stop stops service

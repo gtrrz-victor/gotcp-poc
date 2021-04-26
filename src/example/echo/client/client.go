@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
-	"net/http"
-	"time"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"binaryTCP/src/example/echo"
 	"binaryTCP/src/gotcp"
@@ -24,32 +24,16 @@ func main() {
 		PacketSendChanLimit:    20,
 		PacketReceiveChanLimit: 20,
 	}
-	srv := gotcp.NewServer(config, &Callback{}, &echo.EchoProtocol{})
+	client := gotcp.NewClient(config, &Callback{}, &echo.EchoProtocol{})
 	// stops service
-	defer srv.Stop()
+	defer client.Stop()
 	// starts service
-	go srv.StartDual(conn, time.Second)
+	go client.Start(conn)
 
-	http.HandleFunc("/hello", hello(conn))
-	http.ListenAndServe(":9000", nil)
-	/*
-		// catchs system signal
-		chSig := make(chan os.Signal)
-		signal.Notify(chSig, syscall.SIGINT, syscall.SIGTERM)
-		fmt.Println("Signal: ", <-chSig)
-	*/
-}
-
-func hello(conn *net.TCPConn) func(res http.ResponseWriter, req *http.Request) {
-	return func(res http.ResponseWriter, req *http.Request) {
-		bodyBytes, err := ioutil.ReadAll(req.Body)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println("On HTTP request. Request body content:", (string(bodyBytes)))
-		fmt.Println("Sending content through tcp...")
-		conn.Write(echo.NewEchoPacket(bodyBytes, false).Serialize())
-	}
+	// catchs system signal
+	chSig := make(chan os.Signal)
+	signal.Notify(chSig, syscall.SIGINT, syscall.SIGTERM)
+	fmt.Println("Signal: ", <-chSig)
 }
 
 func checkError(err error) {

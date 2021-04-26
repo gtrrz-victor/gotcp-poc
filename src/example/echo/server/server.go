@@ -20,6 +20,8 @@ func (this *Callback) OnConnect(c *gotcp.Conn) bool {
 	addr := c.GetRawConn().RemoteAddr()
 	c.PutExtraData(addr)
 	fmt.Println("OnConnect:", addr)
+	time.Sleep(2 * time.Second)
+	c.AsyncWritePacket(echo.NewEchoPacket([]byte("Client<"+addr.String()+"> Connected sucessfully"), false), time.Second)
 	return true
 }
 
